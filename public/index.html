@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#F2665B">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>LAN Classroom Chat</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/favicon.svg">
+    <!-- Font Awesome Icons (CDN) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter (CDN) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ═══════════════════════════════════════════════════
+         NETWORK DISCOVERY VIEW (Native Only)
+    ═══════════════════════════════════════════════════ -->
+    <div id="discovery-view" style="display:none; height:100dvh; flex-direction:column; align-items:center; justify-content:center; background:var(--dusk-navy); z-index:999; position:relative;">
+        <div class="login-card" style="text-align:center; width:90%; max-width:400px;">
+            <div class="login-header">
+                <i class="fas fa-search login-logo-icon" id="discovery-icon"></i>
+                <h1 class="login-logo-text" id="discovery-title">Searching...</h1>
+                <p class="login-subtitle" id="discovery-subtitle">Scanning local network for classroom</p>
+            </div>
+            
+            <div id="discovery-loader" style="margin:2rem 0;">
+                <i class="fas fa-circle-notch fa-spin" style="font-size:3rem; color:var(--firefly-coral);"></i>
+            </div>
+            
+            <div id="manual-ip-fallback" style="display:none; width:100%;">
+                <form id="manual-ip-form" class="login-form">
+                    <div class="form-group" style="text-align:left;">
+                        <label for="ip-input"><i class="fas fa-network-wired me-2"></i>Teacher's IP Address</label>
+                        <input type="text" id="ip-input" class="form-input" placeholder="e.g. 192.168.1.15" required autocomplete="off">
+                    </div>
+                    <button type="submit" class="login-btn" style="margin-top:1rem;">
+                        <i class="fas fa-plug me-2"></i>Connect Manually
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         LOGIN VIEW
+    ═══════════════════════════════════════════════════ -->
+    <div id="login-view" class="login-overlay">
+        <div class="login-card">
+            <div class="login-card-header">
+                <i class="fas fa-comments login-logo-icon"></i>
+                <h1 class="login-logo-text">LAN Classroom Chat</h1>
+                <p class="login-subtitle">Enter your details to join the workspace</p>
+            </div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="nickname-input"><i class="fas fa-user me-2"></i>Nickname</label>
+                    <input type="text" id="nickname-input" class="form-input" placeholder="Your display name" required
+                        autocomplete="off" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label for="password-input"><i class="fas fa-lock me-2"></i>Password <span
+                            class="optional-tag">Optional</span></label>
+                    <input type="password" id="password-input" class="form-input" placeholder="Leave blank if student"
+                        autocomplete="off">
+                </div>
+                <div id="login-error" class="login-error" style="display:none;"></div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-arrow-right-to-bracket me-2"></i>Enter Workspace
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════
+         DASHBOARD VIEW
+    ═══════════════════════════════════════════════════ -->
+    <div id="dashboard-view" style="display:none; height:100dvh; flex-direction:column;">
+
+        <!-- Offline Banner -->
+        <div id="offline-banner" class="offline-banner" style="display:none;">
+            <i class="fas fa-wifi"></i> Disconnected - Reconnecting...
+        </div>
+
+        <!-- Header -->
+        <header>
+            <div class="header-container">
+                <div class="logo-section">
+                    <!-- Mobile sidebar toggle -->
+                    <button class="mobile-menu-btn d-md-none" id="mobile-sidebar-btn" aria-label="Open sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <i class="fas fa-comments logo-icon"></i>
+                    <h1 class="logo-text">LAN Chat</h1>
+                </div>
+                <div class="header-controls">
+                    <button id="theme-toggle" class="audio-btn" title="Toggle Light/Dark Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="enableAudio" class="audio-btn">
+                        <i class="fas fa-volume-xmark"></i>
+                        <span class="hidden-mobile">Audio</span>
+                    </button>
+                    <div class="online-status">
+                        <div class="status-dot pulse-dot"></div>
+                        <span id="online-count">0 online</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- App Body: Sidebar + Chat -->
+        <div class="app-body">
+
+
+
+            <!-- ─── Left Sidebar ──────────────────────────────────── -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-profile">
+                    <div class="sidebar-avatar" id="sidebar-avatar">A</div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-username" id="sidebar-username">Username</div>
+                        <div class="sidebar-role" id="sidebar-role">Student</div>
+                    </div>
+                    <button class="sidebar-close-btn d-md-none" id="sidebar-close-btn" aria-label="Close sidebar">
+                        <i class="fas fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Global Channel Button -->
+                <button class="channel-btn active" id="btn-global-chat">
+                    <i class="fas fa-globe channel-btn-icon"></i>
+                    <span>Global Classroom</span>
+                </button>
+
+                <div class="sidebar-divider"></div>
+
+                <div class="sidebar-section-label">
+                    <i class="fas fa-users me-2"></i>Classmates Online
+                </div>
+                <div class="sidebar-online-count" id="sidebar-online-count"
+                    style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--mist-gray);">0 online</div>
+                <ul class="users-list" id="users-list" style="max-height: 200px; overflow-y: auto;">
+                    <!-- Populated dynamically -->
+                </ul>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Teacher Notepad (compact, below users) -->
+                <details class="notepad-details" open>
+                    <summary class="sidebar-section-label" style="cursor:pointer; list-style:none; display:flex; align-items:center; gap:0.25rem;">
+                        <i class="fas fa-edit me-2"></i>Class Notepad
+                        <i class="fas fa-chevron-down" style="margin-left:auto; font-size:0.65rem; opacity:0.5;"></i>
+                    </summary>
+                    <textarea id="class-notepad" class="message-input" style="width:100%; height:80px; font-size:0.82rem; border-radius:8px; margin-top:6px; resize:none;" placeholder="Teacher's notes will appear here..."></textarea>
+                </details>
+
+                <!-- AI Tutor Button -->
+                <div class="sidebar-divider"></div>
+                <button class="channel-btn ai-tutor-btn" id="btn-ai-tutor">
+                    <i class="fas fa-robot channel-btn-icon"></i>
+                    <span>AI Tutor</span>
+                    <span class="ai-badge">AI</span>
+                </button>
+
+                <!-- Download App Button -->
+                <div class="sidebar-divider"></div>
+                <button class="channel-btn" id="btn-download-app">
+                    <i class="fas fa-download channel-btn-icon"></i>
+                    <span>Download App</span>
+                </button>
+
+                <!-- Student Controls (hidden until role confirmed) -->
+                <div id="student-controls" class="student-controls" style="display:none;">
+                    <div class="sidebar-divider"></div>
+                    <button class="channel-btn" id="btn-raise-hand">
+                        <i class="fas fa-hand-paper channel-btn-icon" style="color: #f39c12;"></i>
+                        <span id="raise-hand-text">Raise Hand</span>
+                    </button>
+                </div>
+
+                <!-- Admin Controls -->
+                <div id="admin-controls" class="admin-controls" style="display:none;">
+                    <div class="sidebar-divider"></div>
+                    <div class="sidebar-section-label" style="color: #e74c3c;">
+                        <i class="fas fa-shield-alt me-2"></i>Teacher Controls
+                    </div>
+                    
+                    <button class="channel-btn" id="btn-announcement">
+                        <i class="fas fa-bullhorn channel-btn-icon" style="color: #3498db;"></i>
+                        <span>Send Announcement</span>
+                    </button>
+
+                    <button class="channel-btn" id="btn-create-poll">
+                        <i class="fas fa-poll channel-btn-icon" style="color: #9b59b6;"></i>
+                        <span>Create Live Poll</span>
+                    </button>
+                    
+                    <button class="end-session-btn mt-2" id="btn-end-session">
+                        <i class="fas fa-circle-xmark me-2"></i>End Class Session
+                    </button>
+
+                    <div class="sidebar-divider"></div>
+                    <div class="sidebar-section-label">
+                        <i class="fas fa-hand-paper me-2"></i>Raised Hands Queue
+                    </div>
+                    <ul class="users-list" id="hand-queue-list">
+                        <!-- Populated dynamically -->
+                        <li style="color: #7f8c8d; font-size: 0.85rem; padding: 0.5rem;">No hands raised.</li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- ─── Main Chat Pane ─────────────────────────────────── -->
+            <main class="chat-pane">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <div class="chat-header-avatar" id="chat-header-avatar">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div>
+                            <div class="chat-header-title" id="chat-header-title">Global Classroom</div>
+                            <div class="chat-header-subtitle" id="chat-header-subtitle">Everyone can see these messages
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="chat-container">
+                    <!-- Welcome placeholder -->
+                    <div class="welcome-section" id="welcome-message">
+                        <div class="welcome-content">
+                            <i class="fas fa-rocket welcome-icon"></i>
+                            <h2 class="welcome-title">Welcome to LAN Classroom Chat!</h2>
+                            <p class="welcome-subtitle">Start a conversation below.</p>
+                        </div>
+                    </div>
+                    <div class="messages-container" id="messages-container"></div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-container">
+
+                    <!-- Emoji Picker -->
+                    <div class="emoji-picker" id="emoji-picker">
+                        <div class="emoji-categories">
+                            <button class="emoji-category active" data-category="smileys">😀</button>
+                            <button class="emoji-category" data-category="people">👋</button>
+                            <button class="emoji-category" data-category="nature">🌟</button>
+                            <button class="emoji-category" data-category="food">🍕</button>
+                            <button class="emoji-category" data-category="activities">⚽</button>
+                            <button class="emoji-category" data-category="travel">✈️</button>
+                            <button class="emoji-category" data-category="objects">💡</button>
+                            <button class="emoji-category" data-category="symbols">❤️</button>
+                        </div>
+                        <div class="emoji-grid" id="emoji-grid"></div>
+                    </div>
+
+                    <form id="send-container" class="message-form">
+                        <div class="input-row">
+                            <label for="file-input" class="control-btn file-btn" id="file-btn" title="Attach file" style="display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                <i class="fas fa-paperclip"></i>
+                            </label>
+                            <button type="button" class="control-btn" id="emoji-btn" title="Emoji">
+                                <i class="far fa-face-smile"></i>
+                            </button>
+                            <input type="text" id="messageInp" placeholder="Type your message..." autocomplete="off"
+                                maxlength="500" class="message-input">
+                            <button type="submit" class="send-btn" title="Send">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+
+                        <!-- Hidden file input -->
+                        <input type="file" id="file-input" accept="image/*,.pdf,.doc,.docx,.txt,.zip,.rar" multiple
+                            style="display:none;">
+
+                        <!-- File Preview -->
+                        <div class="file-preview" id="file-preview">
+                            <div class="file-preview-header">
+                                <span><i class="fas fa-paperclip me-2"></i>Selected Files</span>
+                                <button type="button" id="clear-files" class="clear-files-btn" title="Clear all">
+                                    <i class="fas fa-xmark"></i>
+                                </button>
+                            </div>
+                            <div class="file-preview-content" id="preview-content"></div>
+                        </div>
+
+                        <!-- Footer: char count + typing indicator -->
+                        <div class="form-footer">
+                            <span class="char-count" id="char-count">0/500</span>
+                            <span class="typing-indicator" id="typing-indicator"></span>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+
+        <!-- Admin Tab View (Native App Only) -->
+        <div id="admin-tab-view" class="admin-tab-view" style="display:none;">
+            <div class="admin-tab-header">
+                <h2><i class="fas fa-shield-alt me-2"></i>Teacher Dashboard</h2>
+            </div>
+            <div id="admin-tab-content" class="admin-tab-content">
+                <!-- Teacher controls will be relocated here by JS -->
+            </div>
+        </div>
+
+        <!-- Bottom Navigation Bar (Native App Only) -->
+        <nav id="bottom-nav" class="bottom-nav" style="display:none;">
+            <button class="nav-item active" data-tab="chat">
+                <i class="fas fa-comment-dots"></i>
+                <span>Chat</span>
+            </button>
+            <button class="nav-item" data-tab="users">
+                <i class="fas fa-users"></i>
+                <span>Classmates</span>
+            </button>
+            <button class="nav-item" id="nav-admin-btn" data-tab="admin" style="display:none;">
+                <i class="fas fa-shield-alt"></i>
+                <span>Admin</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Audio Element -->
+    <audio id="myAudio" src="js/ting.mp3" preload="auto"></audio>
+
+    <!-- ═══ Announcement Modal ═══ -->
+    <dialog id="announcement-modal" class="native-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <i class="fas fa-bullhorn" style="color:#3498db; margin-right:8px;"></i>
+                <h3 style="margin:0; font-size:1.05rem;">Send Announcement</h3>
+                <form method="dialog" style="margin-left:auto;">
+                    <button class="modal-close-btn" id="announcement-modal-close">&times;</button>
+                </form>
+            </div>
+            <textarea id="announcement-input" class="modal-textarea" rows="4" maxlength="1000" placeholder="Type your announcement to broadcast to all students..."></textarea>
+            <div class="modal-footer">
+                <span id="announcement-char-count" style="font-size:0.75rem; color:var(--mist-gray);">0/1000</span>
+                <button id="announcement-send-btn" class="modal-send-btn" style="background:#3498db;">
+                    <i class="fas fa-bullhorn me-2"></i>Broadcast
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ═══ Poll Creation Modal ═══ -->
+    <dialog id="poll-modal" class="native-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <i class="fas fa-poll" style="color:#9b59b6; margin-right:8px;"></i>
+                <h3 style="margin:0; font-size:1.05rem;">Create Live Poll</h3>
+                <form method="dialog" style="margin-left:auto;">
+                    <button class="modal-close-btn" id="poll-modal-close">&times;</button>
+                </form>
+            </div>
+            <div style="padding:0.25rem 0;">
+                <label style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--mist-gray); display:block; margin-bottom:4px;">Question</label>
+                <input type="text" id="poll-question-input" class="modal-input" maxlength="300" placeholder="What do you want to ask?">
+            </div>
+            <div style="padding:0.25rem 0;">
+                <label style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--mist-gray); display:block; margin-bottom:4px;">Options</label>
+                <div id="poll-options-container">
+                    <input type="text" class="modal-input poll-option-input" maxlength="100" placeholder="Option 1" style="margin-bottom:6px;">
+                    <input type="text" class="modal-input poll-option-input" maxlength="100" placeholder="Option 2" style="margin-bottom:6px;">
+                </div>
+                <button id="poll-add-option" type="button" style="background:transparent; border:1px dashed var(--mist-gray); border-radius:6px; color:var(--mist-gray); padding:6px 12px; font-size:0.82rem; cursor:pointer; width:100%; margin-top:2px;">
+                    <i class="fas fa-plus me-2"></i>Add Option (max 5)
+                </button>
+            </div>
+            <div class="modal-footer">
+                <span id="poll-option-count" style="font-size:0.75rem; color:var(--mist-gray);">2 options</span>
+                <button id="poll-send-btn" class="modal-send-btn" style="background:#9b59b6;">
+                    <i class="fas fa-poll me-2"></i>Launch Poll
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/socket.io.min.js"></script>
+    <script type="module" src="js/client.js"></script>
+    <script src="js/ai-assistant.js"></script>
+    <script>
+        // Register Service Worker for PWA support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('[SW] Registered:', reg.scope))
+                .catch(err => console.warn('[SW] Registration failed:', err));
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,31 @@
+{
+    "name": "modernchat-frontend",
+    "version": "1.0.0",
+    "description": "ModernChat frontend with Custom CSS - GitHub Pages ready",
+    "main": "index.html",
+    "scripts": {
+        "build": "echo 'Frontend is ready for deployment'",
+        "serve": "http-server -p 5500",
+        "dev": "http-server -p 5500"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/yourusername/your-repo-name.git"
+    },
+    "homepage": "https://yourusername.github.io/your-repo-name",
+    "keywords": [
+        "chat",
+        "realtime",
+        "socket.io",
+        "github-pages",
+        "frontend"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/yourusername/your-repo-name/issues"
+    },
+    "devDependencies": {
+        "http-server": "^14.1.1"
+    }
+}

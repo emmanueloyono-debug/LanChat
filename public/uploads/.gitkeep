@@ -1,0 +1,2 @@
+This directory stores uploaded files (images and documents).
+It is served publicly at /uploads/ by Express.

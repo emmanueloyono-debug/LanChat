@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModernChat - Real-time Messaging</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- Custom CSS -->
+    <link href="./css/custom-style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for animations and specific components */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-section">
+                <i class="fas fa-comments logo-icon"></i>
+                <h1 class="logo-text">ModernChat</h1>
+            </div>
+            <div class="header-controls">
+                <button id="enableAudio" class="audio-btn">
+                    <i class="fas fa-volume-up"></i>
+                    <span class="hidden-mobile">Audio</span>
+                </button>
+                <div class="online-status">
+                    <div class="status-dot"></div>
+                    <span id="online-count">0 online</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Chat Container -->
+    <main>
+        <div class="chat-container">
+            <!-- Welcome Message -->
+            <div class="welcome-section" id="welcome-message">
+                <div class="welcome-content">
+                    <i class="fas fa-rocket welcome-icon"></i>
+                    <h2 class="welcome-title">Welcome to ModernChat!</h2>
+                    <p class="welcome-subtitle">Start a conversation and connect with others in real-time</p>
+                </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div class="messages-container" id="messages-container">
+                <!-- Messages will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Message Input Area -->
+        <div class="input-container">
+            <!-- Emoji Picker -->
+            <div class="emoji-picker" id="emoji-picker">
+                <div class="emoji-categories">
+                    <button class="emoji-category active" data-category="smileys">😀</button>
+                    <button class="emoji-category" data-category="people">👋</button>
+                    <button class="emoji-category" data-category="nature">🌟</button>
+                    <button class="emoji-category" data-category="food">🍕</button>
+                    <button class="emoji-category" data-category="activities">⚽</button>
+                    <button class="emoji-category" data-category="travel">✈️</button>
+                    <button class="emoji-category" data-category="objects">💡</button>
+                    <button class="emoji-category" data-category="symbols">❤️</button>
+                </div>
+                <div class="emoji-grid" id="emoji-grid">
+                    <!-- Emojis will be populated by JavaScript -->
+                </div>
+            </div>
+            <form id="send-container" class="message-form">
+                <div class="input-row">
+                    <button type="button" class="control-btn file-btn" id="file-btn">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <button type="button" class="control-btn" id="emoji-btn">
+                        <i class="far fa-smile"></i>
+                    </button>
+                    <input type="text" id="messageInp" placeholder="Type your message..." autocomplete="off"
+                        maxlength="500" class="message-input">
+                    <button type="submit" class="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <input type="file" id="file-input" accept="image/*,.pdf,.doc,.docx,.txt,.zip,.rar" multiple>
+
+                <div class="file-preview" id="file-preview">
+                    <div class="file-preview-header">
+                        <span>Selected Files:</span>
+                        <button type="button" id="clear-files" class="clear-files-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="file-preview-content" id="preview-content">
+                        <!-- File previews will be added here -->
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <span class="char-count">0/500</span>
+                    <span class="typing-indicator" id="typing-indicator"></span>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Audio Element -->
+    <audio id="myAudio" src="js/ting.mp3" preload="auto"></audio>
+
+    <!-- Scripts -->
+    <script>
+        // Load Socket.io from CDN for GitHub Pages, fallback to local for development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            document.write('<script src="http://localhost:8080/socket.io/socket.io.js"><\/script>');
+        } else {
+            document.write('<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"><\/script>');
+        }
+    </script>
+    <script src="js/client.js" defer></script>
+</body>
+
+</html>
